@@ -9,6 +9,8 @@ make install-v8runner
 
 ## Caller
 
+NOTE: Caller must have v8runner binary installed in $PATH.
+
 Example usecase and code:
 
 ```bash
