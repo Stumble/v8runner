@@ -11,6 +11,22 @@ make install-v8runner
 
 NOTE: Caller must have v8runner binary installed in $PATH.
 
+Dockerfile example:
+```Dockerfile
+FROM golang:1.21 AS build
+
+....
+RUN go install github.com/stumble/v8runner/cmd/v8runner@v0.0.1
+....
+
+FROM gcr.io/distroless/cc-debian12
+
+....
+COPY --from=build /go/bin/v8runner /usr/local/bin/
+...
+
+```
+
 Example usecase and code:
 
 ```bash
