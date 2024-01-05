@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/stumble/v8runner/pkg/types"
 )
 
 type ReaderRunner struct {
@@ -42,7 +44,7 @@ func (r *ReaderRunner) Process() error {
 	out := gob.NewEncoder(r.Output)
 
 	for {
-		var req RunCodeRequest
+		var req types.RunCodeRequest
 		err := in.Decode(&req)
 		if err != nil {
 			// end of input
@@ -62,12 +64,12 @@ func (r *ReaderRunner) Process() error {
 		}
 
 		switch req.ResponseType {
-		case RtnValueTypeNil:
+		case types.RtnValueTypeNil:
 			if err = out.Encode(nilResult(req.ID)); err != nil {
 				return err
 			}
 			continue
-		case RtnValueTypeJSON:
+		case types.RtnValueTypeJSON:
 			if err = out.Encode(jsonResult(req.ID, runner.CodeCtx(), val)); err != nil {
 				return err
 			}

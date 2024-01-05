@@ -12,7 +12,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/stumble/v8runner/pkg/runner"
+	"github.com/stumble/v8runner/pkg/types"
 )
 
 var (
@@ -143,10 +143,10 @@ func (r *ProcRunner) RunCodeJSON(ctx context.Context, code string) (string, erro
 	go func() {
 		defer wg.Done()
 
-		req := runner.RunCodeRequest{
+		req := types.RunCodeRequest{
 			ID:           fmt.Sprintf("%d", r.seq),
 			Code:         code,
-			ResponseType: runner.RtnValueTypeJSON,
+			ResponseType: types.RtnValueTypeJSON,
 		}
 		err := r.encoder.Encode(req)
 		if err != nil {
@@ -154,7 +154,7 @@ func (r *ProcRunner) RunCodeJSON(ctx context.Context, code string) (string, erro
 			return
 		}
 
-		var res runner.RunCodeResponse
+		var res types.RunCodeResponse
 		err = r.decoder.Decode(&res)
 		if err != nil {
 			// error is EOF when the process is killed

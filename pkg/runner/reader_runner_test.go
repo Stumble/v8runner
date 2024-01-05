@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+
+	"github.com/stumble/v8runner/pkg/types"
 )
 
 type ReaderRunnerTestSuite struct {
@@ -25,17 +27,17 @@ func (suite *ReaderRunnerTestSuite) SetupTest() {
 func (suite *ReaderRunnerTestSuite) TestOneRequest() {
 	for _, tc := range []struct {
 		name string
-		req  RunCodeRequest
-		res  RunCodeResponse
+		req  types.RunCodeRequest
+		res  types.RunCodeResponse
 	}{
 		{
 			name: "simpleInt",
-			req: RunCodeRequest{
+			req: types.RunCodeRequest{
 				ID:           "x",
 				Code:         "1+1",
-				ResponseType: RtnValueTypeJSON,
+				ResponseType: types.RtnValueTypeJSON,
 			},
-			res: RunCodeResponse{
+			res: types.RunCodeResponse{
 				ID:     "x",
 				Error:  nil,
 				Result: ptr("2"),
@@ -43,12 +45,12 @@ func (suite *ReaderRunnerTestSuite) TestOneRequest() {
 		},
 		{
 			name: "simpleJSON",
-			req: RunCodeRequest{
+			req: types.RunCodeRequest{
 				ID:           "x",
 				Code:         `let v = {a:1, b:"xx"}; v;`,
-				ResponseType: RtnValueTypeJSON,
+				ResponseType: types.RtnValueTypeJSON,
 			},
-			res: RunCodeResponse{
+			res: types.RunCodeResponse{
 				ID:     "x",
 				Error:  nil,
 				Result: ptr(`{"a":1,"b":"xx"}`),
@@ -56,12 +58,12 @@ func (suite *ReaderRunnerTestSuite) TestOneRequest() {
 		},
 		{
 			name: "nil",
-			req: RunCodeRequest{
+			req: types.RunCodeRequest{
 				ID:           "y",
 				Code:         `const f = (a,b) => { return a + b; }`,
-				ResponseType: RtnValueTypeNil,
+				ResponseType: types.RtnValueTypeNil,
 			},
-			res: RunCodeResponse{
+			res: types.RunCodeResponse{
 				ID:     "y",
 				Error:  nil,
 				Result: nil,
@@ -69,12 +71,12 @@ func (suite *ReaderRunnerTestSuite) TestOneRequest() {
 		},
 		{
 			name: "invalid code",
-			req: RunCodeRequest{
+			req: types.RunCodeRequest{
 				ID:           "e",
 				Code:         `const f = }`,
-				ResponseType: RtnValueTypeNil,
+				ResponseType: types.RtnValueTypeNil,
 			},
-			res: RunCodeResponse{
+			res: types.RunCodeResponse{
 				ID:     "e",
 				Error:  ptr("failed to run script because: SyntaxError: Unexpected token '}'"),
 				Result: nil,
@@ -91,7 +93,7 @@ func (suite *ReaderRunnerTestSuite) TestOneRequest() {
 		suite.NotNil(runner)
 		err = runner.Process()
 		suite.Require().NoError(err)
-		res := &RunCodeResponse{}
+		res := &types.RunCodeResponse{}
 		readFromBuf := gob.NewDecoder(strings.NewReader(result.String()))
 		err = readFromBuf.Decode(res)
 		suite.NoError(err)
@@ -102,16 +104,16 @@ func (suite *ReaderRunnerTestSuite) TestOneRequest() {
 func (suite *ReaderRunnerTestSuite) Test2Requests() {
 	buf := &bytes.Buffer{}
 	writeToBuf := gob.NewEncoder(buf)
-	err := writeToBuf.Encode(RunCodeRequest{
+	err := writeToBuf.Encode(types.RunCodeRequest{
 		ID:           "x",
 		Code:         "let a = 1+1; a;",
-		ResponseType: RtnValueTypeJSON,
+		ResponseType: types.RtnValueTypeJSON,
 	})
 	suite.NoError(err)
-	err = writeToBuf.Encode(RunCodeRequest{
+	err = writeToBuf.Encode(types.RunCodeRequest{
 		ID:           "y",
 		Code:         "let b = a+4; b;",
-		ResponseType: RtnValueTypeJSON,
+		ResponseType: types.RtnValueTypeJSON,
 	})
 	suite.NoError(err)
 
@@ -121,18 +123,18 @@ func (suite *ReaderRunnerTestSuite) Test2Requests() {
 	suite.NotNil(runner)
 	err = runner.Process()
 	suite.Require().NoError(err)
-	res := &RunCodeResponse{}
+	res := &types.RunCodeResponse{}
 	readFromBuf := gob.NewDecoder(strings.NewReader(result.String()))
 	err = readFromBuf.Decode(res)
 	suite.NoError(err)
-	suite.Equal(RunCodeResponse{
+	suite.Equal(types.RunCodeResponse{
 		ID:     "x",
 		Error:  nil,
 		Result: ptr("2"),
 	}, *res)
 	err = readFromBuf.Decode(res)
 	suite.NoError(err)
-	suite.Equal(RunCodeResponse{
+	suite.Equal(types.RunCodeResponse{
 		ID:     "y",
 		Error:  nil,
 		Result: ptr("6"),
@@ -167,31 +169,31 @@ func (suite *ReaderRunnerTestSuite) TestPipeline() {
 	go func() {
 		defer wg.Done()
 
-		encoder := NewRunCodeRequestEncoder(stdinWriter)
-		decoder := NewReadRunCodeResponseDecoder(stdoutReader)
+		encoder := types.NewRunCodeRequestEncoder(stdinWriter)
+		decoder := types.NewReadRunCodeResponseDecoder(stdoutReader)
 		for _, tc := range []struct {
-			req RunCodeRequest
-			res RunCodeResponse
+			req types.RunCodeRequest
+			res types.RunCodeResponse
 		}{
 			{
-				req: RunCodeRequest{
+				req: types.RunCodeRequest{
 					ID:           "x",
 					Code:         "const f = (a,b) => { return a + b; }",
-					ResponseType: RtnValueTypeNil,
+					ResponseType: types.RtnValueTypeNil,
 				},
-				res: RunCodeResponse{
+				res: types.RunCodeResponse{
 					ID:     "x",
 					Error:  nil,
 					Result: nil,
 				},
 			},
 			{
-				req: RunCodeRequest{
+				req: types.RunCodeRequest{
 					ID:           "y",
 					Code:         `let v = f(3,4); v;`,
-					ResponseType: RtnValueTypeJSON,
+					ResponseType: types.RtnValueTypeJSON,
 				},
-				res: RunCodeResponse{
+				res: types.RunCodeResponse{
 					ID:     "y",
 					Error:  nil,
 					Result: ptr(`7`),
@@ -200,7 +202,7 @@ func (suite *ReaderRunnerTestSuite) TestPipeline() {
 		} {
 			err := encoder.Encode(tc.req)
 			suite.NoError(err)
-			res := RunCodeResponse{}
+			res := types.RunCodeResponse{}
 			err = decoder.Decode(&res)
 			suite.NoError(err)
 			suite.Equal(tc.res, res)

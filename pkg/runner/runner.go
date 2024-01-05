@@ -8,10 +8,6 @@ import (
 	v8 "rogchap.com/v8go"
 )
 
-// const (
-// 	DefaultMaxHeapSizeMB = 32
-// )
-
 var (
 	ErrorTimeout = fmt.Errorf("timeout")
 )

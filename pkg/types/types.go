@@ -1,10 +1,8 @@
-package runner
+package types
 
 import (
 	"encoding/gob"
 	"io"
-
-	v8 "rogchap.com/v8go"
 )
 
 type RtnValType string
@@ -24,31 +22,6 @@ type RunCodeResponse struct {
 	ID     string  `json:"id"`
 	Error  *string `json:"error,omitempty"`
 	Result *string `json:"result,omitempty"`
-}
-
-func errResult(id string, err error) RunCodeResponse {
-	errStr := err.Error()
-	return RunCodeResponse{
-		ID:    id,
-		Error: &errStr,
-	}
-}
-
-func nilResult(id string) RunCodeResponse {
-	return RunCodeResponse{
-		ID: id,
-	}
-}
-
-func jsonResult(id string, codeCtx *v8.Context, val *v8.Value) RunCodeResponse {
-	jsonStr, err := v8.JSONStringify(codeCtx, val)
-	if err != nil {
-		return errResult(id, err)
-	}
-	return RunCodeResponse{
-		ID:     id,
-		Result: &jsonStr,
-	}
 }
 
 // NewRunCodeRequestEncoder creates a new encoder for RunCodeRequest.
