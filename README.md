@@ -16,7 +16,7 @@ Dockerfile example:
 FROM golang:1.21 AS build
 
 ....
-RUN go install github.com/stumble/v8runner/cmd/v8runner@v0.0.3
+RUN go install github.com/stumble/v8runner/cmd/v8runner@v0.0.4
 ....
 
 FROM gcr.io/distroless/cc-debian12
