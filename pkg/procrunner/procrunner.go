@@ -1,12 +1,16 @@
 package procrunner
 
 import (
+	// "bufio"
 	"context"
 	"encoding/gob"
 	"fmt"
 	"io"
 	"os/exec"
 	"sync"
+	"sync/atomic"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/stumble/v8runner/pkg/runner"
 )
@@ -29,9 +33,12 @@ type ProcRunner struct {
 	encoder *gob.Encoder
 	decoder *gob.Decoder
 
-	mu     sync.Mutex
-	seq    uint64
-	closed bool
+	mu  sync.Mutex
+	seq uint64
+
+	wg      sync.WaitGroup
+	closeFn func()
+	closed  atomic.Bool
 }
 
 // NewProcRunner creates a new ProcRunner that runs the given file.
@@ -59,34 +66,52 @@ func NewProcRunner(fileName string, maxHeapSizeMB uint) (*ProcRunner, error) {
 		return nil, err
 	}
 
-	return &ProcRunner{
+	proc := &ProcRunner{
 		cmd:     cmd,
 		stdin:   stdin,
 		stdout:  stdout,
 		stderr:  stderr,
 		encoder: gob.NewEncoder(stdin),
 		decoder: gob.NewDecoder(stdout),
-	}, nil
+		closeFn: sync.OnceFunc(func() {
+			err := cmd.Process.Kill()
+			if err != nil {
+				log.Debug().Err(err).Msgf("v8 kill failed")
+			}
+		}),
+	}
+
+	proc.wg.Add(1)
+	// uses Wait() to handle SIGCHLD to avoid zombie process.
+	go func() {
+		defer proc.wg.Done()
+		_ = cmd.Wait()
+		proc.closed.Store(true)
+	}()
+	// // handle stderr
+	// proc.wg.Add(1)
+	// go func() {
+	// 	defer proc.wg.Done()
+	// 	// Create a scanner to read stderr line by line
+	// 	scanner := bufio.NewScanner(stderr)
+	// 	for scanner.Scan() {
+	// 		log.Debug().Msgf("v8 stderr: %s", scanner.Text())
+	// 	}
+	// 	// Check for errors in scanning
+	// 	if err := scanner.Err(); err != nil {
+	// 		log.Error().Err(err).Msg("error reading stderr")
+	// 	}
+	// }()
+	return proc, nil
 }
 
 func (r *ProcRunner) IsClosed() bool {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	return r.closed
+	return r.closed.Load()
 }
 
-func (r *ProcRunner) Close() error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	return r.close()
-}
-
-func (r *ProcRunner) close() error {
-	if r.closed {
-		return nil
-	}
-	r.closed = true
-	return r.cmd.Process.Kill()
+func (r *ProcRunner) Close() {
+	r.closeFn()
+	r.wg.Wait()
 }
 
 // RunCodeJSON runs the given code and returns the JSON result.
@@ -104,7 +129,7 @@ func (r *ProcRunner) RunCodeJSON(ctx context.Context, code string) (string, erro
 	defer r.mu.Unlock()
 
 	// don't run if closed
-	if r.closed {
+	if r.IsClosed() {
 		return "", ErrorClosed
 	}
 
@@ -158,7 +183,7 @@ func (r *ProcRunner) RunCodeJSON(ctx context.Context, code string) (string, erro
 	case err := <-errs:
 		return "", err
 	case <-ctx.Done():
-		_ = r.close()
+		r.Close()
 		// prevent goroutine leak
 		// Close() would have killed the process and should
 		// send an EOF to the decoder.

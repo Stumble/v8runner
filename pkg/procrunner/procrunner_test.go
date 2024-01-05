@@ -28,7 +28,7 @@ func (suite *ProcRunnerTestSuite) TestBasic() {
 	res, err := runner.RunCodeJSON(context.Background(), "1+1")
 	suite.NoError(err)
 	suite.Equal("2", res)
-	suite.NoError(runner.Close())
+	runner.Close()
 }
 
 func (suite *ProcRunnerTestSuite) TestTimeout() {
@@ -42,7 +42,7 @@ func (suite *ProcRunnerTestSuite) TestTimeout() {
 	// timeout close the runner
 	suite.True(runner.IsClosed())
 	// safe to close twice
-	suite.NoError(runner.Close())
+	runner.Close()
 }
 
 func (suite *ProcRunnerTestSuite) TestMemoryLimit() {
@@ -75,7 +75,7 @@ func (suite *ProcRunnerTestSuite) TestNoReturnValue() {
 	suite.Equal("null", res)
 
 	// safe to close twice
-	suite.NoError(runner.Close())
+	runner.Close()
 }
 
 func (suite *ProcRunnerTestSuite) TestThrow() {
@@ -85,5 +85,5 @@ func (suite *ProcRunnerTestSuite) TestThrow() {
 	suite.Equal("failed to run script because: this is a test error", err.Error())
 	suite.Equal("", res)
 	// safe to close twice
-	suite.NoError(runner.Close())
+	runner.Close()
 }
