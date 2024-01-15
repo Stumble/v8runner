@@ -39,6 +39,8 @@ type ProcRunner struct {
 	wg      sync.WaitGroup
 	closeFn func()
 	closed  atomic.Bool
+
+	postCloseFn []func()
 }
 
 // NewProcRunner creates a new ProcRunner that runs the given file.
@@ -87,6 +89,10 @@ func NewProcRunner(fileName string, maxHeapSizeMB uint) (*ProcRunner, error) {
 		defer proc.wg.Done()
 		_ = cmd.Wait()
 		proc.closed.Store(true)
+		// call postCloseFn only after the process is killed
+		for _, f := range proc.postCloseFn {
+			f()
+		}
 	}()
 	// // handle stderr
 	// proc.wg.Add(1)
@@ -190,4 +196,10 @@ func (r *ProcRunner) RunCodeJSON(ctx context.Context, code string) (string, erro
 		wg.Wait()
 		return "", ErrorTimeout
 	}
+}
+
+// AddPostCloseFn adds a function to be called after the runner is closed.
+// NOTE: NOT concurrency safe.
+func (r *ProcRunner) AddPostCloseFn(f func()) {
+	r.postCloseFn = append(r.postCloseFn, f)
 }
