@@ -8,9 +8,7 @@ import (
 	v8 "github.com/stumble/v8go"
 )
 
-var (
-	ErrorTimeout = fmt.Errorf("timeout")
-)
+var ErrorTimeout = fmt.Errorf("timeout")
 
 type Option interface {
 	Apply() error

@@ -17,7 +17,10 @@ func runApplyInt64() {
 	}
 	defer runner.Close()
 	ctx := context.Background()
-	_, err = runner.RunCodeJSON(ctx, `let f = function(data){ return data.a + data.b === 579 ? 111 : 0; }`)
+	_, err = runner.RunCodeJSON(
+		ctx,
+		`let f = function(data){ return data.a + data.b === 579 ? 111 : 0; }`,
+	)
 	if err != nil {
 		panic(err)
 	}

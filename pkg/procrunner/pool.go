@@ -5,9 +5,7 @@ import (
 	"sync"
 )
 
-var (
-	ErrMaxReached = fmt.Errorf("max reached")
-)
+var ErrMaxReached = fmt.Errorf("max reached")
 
 // ProcRunnerPool is a manager that manages a pool of ProcRunner.
 // It can safely enforce the global memory limit by limiting the number of concurrent ProcRunners.

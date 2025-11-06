@@ -2,7 +2,6 @@ package runner
 
 import (
 	v8 "github.com/stumble/v8go"
-
 	"github.com/stumble/v8runner/pkg/types"
 )
 
