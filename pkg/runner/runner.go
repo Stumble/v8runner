@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	v8 "rogchap.com/v8go"
+	v8 "github.com/stumble/v8go"
 )
 
-var (
-	ErrorTimeout = fmt.Errorf("timeout")
-)
+var ErrorTimeout = fmt.Errorf("timeout")
 
 type Option interface {
 	Apply() error

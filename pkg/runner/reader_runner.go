@@ -18,7 +18,12 @@ type ReaderRunner struct {
 }
 
 // NewReaderRunner creates a new ReaderRunner that reads from input and writes to output.
-func NewReaderRunner(input io.Reader, output io.Writer, fileName string, maxHeapSizeMB uint) (*ReaderRunner, error) {
+func NewReaderRunner(
+	input io.Reader,
+	output io.Writer,
+	fileName string,
+	maxHeapSizeMB uint,
+) (*ReaderRunner, error) {
 	return &ReaderRunner{
 		FileName:      fileName,
 		MaxHeapSizeMB: maxHeapSizeMB,

@@ -11,7 +11,6 @@ import (
 	"sync/atomic"
 
 	"github.com/rs/zerolog/log"
-
 	"github.com/stumble/v8runner/pkg/types"
 )
 
@@ -47,7 +46,14 @@ type ProcRunner struct {
 func NewProcRunner(fileName string, maxHeapSizeMB uint) (*ProcRunner, error) {
 	// Create the command
 	// Should be safe to pass these parameters because they are not user input.
-	cmd := exec.Command("v8runner", "--file", fileName, "--max-heap", fmt.Sprintf("%d", maxHeapSizeMB)) //nolint:gosec
+	//nolint:gosec // G204: Parameters are controlled and validated
+	cmd := exec.Command(
+		"v8runner",
+		"--file",
+		fileName,
+		"--max-heap",
+		fmt.Sprintf("%d", maxHeapSizeMB),
+	)
 
 	// Set up the stdin, stdout, stderr
 	stdin, err := cmd.StdinPipe()
@@ -172,7 +178,7 @@ func (r *ProcRunner) RunCodeJSON(ctx context.Context, code string) (string, erro
 			return
 		}
 		if res.Error != nil {
-			errs <- fmt.Errorf(*res.Error)
+			errs <- fmt.Errorf("%s", *res.Error)
 			return
 		}
 		if res.ID != req.ID {

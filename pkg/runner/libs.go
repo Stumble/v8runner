@@ -1,8 +1,7 @@
 package runner
 
 import (
-	v8 "rogchap.com/v8go"
-
+	v8 "github.com/stumble/v8go"
 	"github.com/stumble/v8runner/pkg/types"
 )
 

@@ -16,7 +16,10 @@ func main() {
 	}
 	defer runner.Close()
 
-	res, err := runner.RunCodeJSON(context.Background(), "const f = (data) => { return {a: data.X, b: data.Y} };")
+	res, err := runner.RunCodeJSON(
+		context.Background(),
+		"const f = (data) => { return {a: data.X, b: data.Y} };",
+	)
 	if err != nil {
 		panic(err)
 	}
