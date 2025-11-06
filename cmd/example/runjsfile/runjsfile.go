@@ -12,11 +12,14 @@ import (
 // readFileToString reads the contents of the file specified by filename
 // and returns it as a string.
 func readFileToString(filename string) (string, error) {
+	// #nosec G304 -- This is an example program that intentionally opens user-specified files
 	file, err := os.Open(filename)
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	bytes, err := io.ReadAll(file)
 	if err != nil {

@@ -172,7 +172,7 @@ func (r *ProcRunner) RunCodeJSON(ctx context.Context, code string) (string, erro
 			return
 		}
 		if res.Error != nil {
-			errs <- fmt.Errorf(*res.Error)
+			errs <- fmt.Errorf("%s", *res.Error)
 			return
 		}
 		if res.ID != req.ID {
