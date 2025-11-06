@@ -46,13 +46,14 @@ type ProcRunner struct {
 func NewProcRunner(fileName string, maxHeapSizeMB uint) (*ProcRunner, error) {
 	// Create the command
 	// Should be safe to pass these parameters because they are not user input.
+	//nolint:gosec // G204: Parameters are controlled and validated
 	cmd := exec.Command(
 		"v8runner",
 		"--file",
 		fileName,
 		"--max-heap",
 		fmt.Sprintf("%d", maxHeapSizeMB),
-	) //nolint:gosec
+	)
 
 	// Set up the stdin, stdout, stderr
 	stdin, err := cmd.StdinPipe()
